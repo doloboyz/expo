@@ -18,8 +18,7 @@ export const currentlyRunning: CurrentlyRunningInfo = {
 // Constructs the availableUpdate from the native state change event context
 export const availableUpdateFromContext = (context: { [key: string]: any }) => {
   const manifest = context?.latestManifest;
-  const isRollback = context.isRollback;
-  return manifest || isRollback
+  return manifest
     ? {
         updateId: manifest?.id ?? null,
         createdAt:
@@ -29,7 +28,6 @@ export const availableUpdateFromContext = (context: { [key: string]: any }) => {
             ? new Date(manifest.publishedTime)
             : null,
         manifest: manifest || null,
-        isRollback,
       }
     : undefined;
 };
@@ -37,8 +35,7 @@ export const availableUpdateFromContext = (context: { [key: string]: any }) => {
 // Constructs the downloadedUpdate from the native state change event context
 export const downloadedUpdateFromContext = (context: { [key: string]: any }) => {
   const manifest = context?.downloadedManifest;
-  const isRollback = context.isRollback;
-  return manifest || isRollback
+  return manifest
     ? {
         updateId: manifest?.id ?? null,
         createdAt:
@@ -48,7 +45,6 @@ export const downloadedUpdateFromContext = (context: { [key: string]: any }) => 
             ? new Date(manifest.publishedTime)
             : null,
         manifest: manifest || null,
-        isRollback,
       }
     : undefined;
 };
@@ -78,11 +74,12 @@ export const reduceUpdatesStateFromContext = (
   return {
     ...updatesState,
     isUpdateAvailable: context.isUpdateAvailable,
-    isUpdatePending: context.isUpdatePending || availableUpdate?.isRollback || false,
+    isUpdatePending: context.isUpdatePending,
     isChecking: context.isChecking,
     isDownloading: context.isDownloading,
     availableUpdate,
     downloadedUpdate,
-    error: context.checkError || context.downloadError,
+    checkError: context.checkError,
+    downloadError: context.downloadError,
   };
 };

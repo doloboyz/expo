@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 
-import * as UseUpdates from '..';
+import * as Updates from '..';
 
-const { useUpdates, checkForUpdate, downloadUpdate, readLogEntries } = UseUpdates;
+const { checkForUpdateAsync, fetchUpdateAsync, useUpdates } = Updates;
 
 const UseUpdatesTestApp = () => {
   const {
@@ -12,9 +12,9 @@ const UseUpdatesTestApp = () => {
     downloadedUpdate,
     isUpdateAvailable,
     isUpdatePending,
-    error,
+    checkError,
+    downloadError,
     lastCheckForUpdateTimeSinceRestart,
-    logEntries,
   } = useUpdates();
   return (
     <View>
@@ -35,18 +35,12 @@ const UseUpdatesTestApp = () => {
       {/* Booleans */}
       <Text testID="isUpdateAvailable">{`${isUpdateAvailable}`}</Text>
       <Text testID="isUpdatePending">{`${isUpdatePending}`}</Text>
-      {/* Log entries, if they have been read */}
-      {(logEntries?.length || 0) > 0 ? (
-        <Text testID="logEntry">
-          {JSON.stringify(logEntries ? logEntries[0].message : '') || ''}
-        </Text>
-      ) : null}
       {/* Error, if one has occurred */}
-      {error ? <Text testID="error">{error.message}</Text> : null}
+      {checkError ? <Text testID="checkError">{checkError.message}</Text> : null}
+      {downloadError ? <Text testID="downloadError">{downloadError.message}</Text> : null}
       {/* Buttons for test code to invoke methods */}
-      <Pressable testID="checkForUpdate" onPress={() => checkForUpdate()} />
-      <Pressable testID="downloadUpdate" onPress={() => downloadUpdate()} />
-      <Pressable testID="readLogEntries" onPress={() => readLogEntries()} />
+      <Pressable testID="checkForUpdate" onPress={() => checkForUpdateAsync()} />
+      <Pressable testID="downloadUpdate" onPress={() => fetchUpdateAsync()} />
     </View>
   );
 };

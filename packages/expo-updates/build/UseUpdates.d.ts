@@ -1,33 +1,5 @@
 import { CurrentlyRunningInfo, UpdateInfo, UseUpdatesReturnType } from './UseUpdates.types';
-/**
- * Calls [`Updates.checkForUpdateAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatescheckforupdateasync)
- * and refreshes the `availableUpdate` property with the result.
- * If an error occurs, the `error` property will be set.
- */
-declare const checkForUpdate: () => void;
-/**
- * Downloads an update, if one is available, using
- * [`Updates.fetchUpdateAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatesfetchupdateasync).
- * This should not be called unless `isUpdateAvailable` is true.
- * If an error occurs, the `error` property will be set.
- */
-declare const downloadUpdate: () => void;
-/**
- * Runs an update by calling [`Updates.reloadAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatesreloadasync).
- * This instructs the app to reload using the most recently downloaded version.
- * This is useful for triggering a newly downloaded update to launch without the user needing to manually restart the app.
- * This should not be called unless there is an available update
- * that has already been successfully downloaded (`isUpdatePending` is true).
- * If an error occurs, the `error` property will be set.
- */
-declare const runUpdate: () => void;
-/**
- * Calls `Updates.readLogEntriesAsync()` and sets the `logEntries` property to the results.
- * If an error occurs, the `error` property will be set.
- *
- * @param maxAge Max age of log entries to read, in ms. Defaults to 3600000 (1 hour).
- */
-declare const readLogEntries: (maxAge?: number) => void;
+export type { CurrentlyRunningInfo, UpdateInfo, UseUpdatesReturnType };
 /**
  * Hook that obtains information on available updates and on the currently running update.
  *
@@ -36,19 +8,17 @@ declare const readLogEntries: (maxAge?: number) => void;
  * @example
  * ```tsx UpdatesDemo.tsx
  * import { StatusBar } from 'expo-status-bar';
+ * import * as Updates from 'expo-updates';
  * import React from 'react';
  * import { Pressable, Text, View } from 'react-native';
  *
- * import type { UseUpdatesEvent } from '@expo/use-updates';
- * import {
- *   useUpdates,
- *   checkForUpdate,
- *   downloadUpdate,
- *   runUpdate,
- * } from '@expo/use-updates';
- *
  * export default function UpdatesDemo() {
- *   const { currentlyRunning, availableUpdate, isUpdateAvailable, isUpdatePending } = useUpdates();
+ *   const {
+ *     currentlyRunning,
+ *     availableUpdate,
+ *     isUpdateAvailable,
+ *     isUpdatePending
+ *   } = Updates.useUpdates();
  *
  *   React.useEffect(() => {
  *     if (isUpdatePending) {
@@ -69,9 +39,9 @@ declare const readLogEntries: (maxAge?: number) => void;
  *     <View style={styles.container}>
  *       <Text style={styles.headerText}>Updates Demo</Text>
  *       <Text>{runTypeMessage}</Text>
- *       <Button pressHandler={checkForUpdate} text="Check manually for updates" />
+ *       <Button pressHandler={() => Updates.checkForUpdateAsync()} text="Check manually for updates" />
  *       {showDownloadButton ? (
- *         <Button pressHandler={downloadUpdate} text="Download and run update" />
+ *         <Button pressHandler={() => Updates.fetchUpdateAsync()} text="Download and run update" />
  *       ) : null}
  *       <StatusBar style="auto" />
  *     </View>
@@ -79,7 +49,5 @@ declare const readLogEntries: (maxAge?: number) => void;
  * }
  * ```
  */
-declare const useUpdates: () => UseUpdatesReturnType;
-export { checkForUpdate, downloadUpdate, runUpdate, readLogEntries, useUpdates };
-export type { CurrentlyRunningInfo, UpdateInfo, UseUpdatesReturnType };
+export declare const useUpdates: () => UseUpdatesReturnType;
 //# sourceMappingURL=UseUpdates.d.ts.map

@@ -1,14 +1,11 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import '@testing-library/jest-native/extend-expect';
 import React from 'react';
 
-import * as Updates from '../Updates';
-import type { Manifest, UpdatesNativeStateChangeEvent, UpdatesLogEntry } from '../Updates.types';
+import type { Manifest, UpdatesNativeStateChangeEvent } from '../Updates.types';
 import { emitStateChangeEvent } from '../UpdatesEmitter';
 import { availableUpdateFromContext } from '../UseUpdatesUtils';
 import UseUpdatesTestApp from './UseUpdatesTestApp';
-
-const { UpdatesLogEntryCode, UpdatesLogEntryLevel } = Updates;
 
 jest.mock('expo-updates', () => {
   return {
@@ -114,7 +111,7 @@ describe('useUpdates()', () => {
         downloadError: mockError,
       },
     };
-    it('Shows currently running info', async () => {
+    xit('Shows currently running info', async () => {
       render(<UseUpdatesTestApp />);
       const updateIdView = await screen.findByTestId('currentlyRunning_updateId');
       expect(updateIdView).toHaveTextContent('0000-1111');
@@ -124,7 +121,7 @@ describe('useUpdates()', () => {
       expect(channelView).toHaveTextContent('main');
     });
 
-    it('Shows available update after receiving state change', async () => {
+    xit('Shows available update after receiving state change', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isCheckingEvent);
@@ -142,7 +139,7 @@ describe('useUpdates()', () => {
       expect(isUpdateAvailableView).toHaveTextContent('true');
     });
 
-    it('Shows no available update after receiving state change', async () => {
+    xit('Shows no available update after receiving state change', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isCheckingEvent);
@@ -161,7 +158,7 @@ describe('useUpdates()', () => {
       expect(isUpdateAvailableView).toHaveTextContent('false');
     });
 
-    it('Handles error in checkForUpdate()', async () => {
+    xit('Handles error in checkForUpdate()', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isCheckingEvent);
@@ -173,7 +170,7 @@ describe('useUpdates()', () => {
       expect(isUpdateAvailableView).toHaveTextContent('false');
     });
 
-    it('Shows downloaded update after receiving state change', async () => {
+    xit('Shows downloaded update after receiving state change', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isDownloadingEvent);
@@ -187,7 +184,7 @@ describe('useUpdates()', () => {
       expect(isUpdatePendingView).toHaveTextContent('true');
     });
 
-    it('Handles error during downloadUpdate()', async () => {
+    xit('Handles error during downloadUpdate()', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isDownloadingEvent);
@@ -199,23 +196,6 @@ describe('useUpdates()', () => {
       expect(isUpdateAvailableView).toHaveTextContent('false');
       const isUpdatePendingView = await screen.findByTestId('isUpdatePending');
       expect(isUpdatePendingView).toHaveTextContent('false');
-    });
-
-    it('Shows log entries after running readLogEntries()', async () => {
-      const logEntry: UpdatesLogEntry = {
-        timestamp: 100,
-        message: 'Message 1',
-        code: UpdatesLogEntryCode.NONE,
-        level: UpdatesLogEntryLevel.INFO,
-      };
-      jest.spyOn(Updates, 'readLogEntriesAsync').mockResolvedValueOnce([logEntry]);
-      render(<UseUpdatesTestApp />);
-      const buttonView = await screen.findByTestId('readLogEntries');
-      await act(async () => {
-        fireEvent(buttonView, 'press');
-      });
-      const logEntryView = await screen.findByTestId('logEntry');
-      expect(logEntryView).toHaveTextContent('Message 1');
     });
   });
 

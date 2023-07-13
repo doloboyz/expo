@@ -8,7 +8,6 @@ export declare const availableUpdateFromContext: (context: {
     updateId: any;
     createdAt: Date | null;
     manifest: any;
-    isRollback: any;
 } | undefined;
 export declare const downloadedUpdateFromContext: (context: {
     [key: string]: any;
@@ -16,7 +15,6 @@ export declare const downloadedUpdateFromContext: (context: {
     updateId: any;
     createdAt: Date | null;
     manifest: any;
-    isRollback: any;
 } | undefined;
 export declare const defaultUseUpdatesState: UseUpdatesStateType;
 export declare const reduceUpdatesStateFromContext: (updatesState: UseUpdatesStateType, context: UpdatesNativeStateMachineContext) => {
@@ -24,29 +22,29 @@ export declare const reduceUpdatesStateFromContext: (updatesState: UseUpdatesSta
     lastCheckForUpdateTimeSinceRestart: Date;
     availableUpdate?: import("./UseUpdates.types").UpdateInfo | undefined;
     downloadedUpdate?: import("./UseUpdates.types").UpdateInfo | undefined;
-    error?: Error | undefined;
+    checkError?: Error | undefined;
+    downloadError?: Error | undefined;
     isUpdateAvailable: boolean;
     isUpdatePending: boolean;
     isDownloading: boolean;
     logEntries?: Updates.UpdatesLogEntry[] | undefined;
 } | {
     isUpdateAvailable: boolean;
-    isUpdatePending: any;
+    isUpdatePending: boolean;
     isChecking: false;
     isDownloading: boolean;
     availableUpdate: {
         updateId: any;
         createdAt: Date | null;
         manifest: any;
-        isRollback: any;
     } | undefined;
     downloadedUpdate: {
         updateId: any;
         createdAt: Date | null;
         manifest: any;
-        isRollback: any;
     } | undefined;
-    error: Error | undefined;
+    checkError: Error | undefined;
+    downloadError: Error | undefined;
     lastCheckForUpdateTimeSinceRestart?: Date | undefined;
     logEntries?: Updates.UpdatesLogEntry[] | undefined;
 };

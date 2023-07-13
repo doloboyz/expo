@@ -57,7 +57,7 @@ export function addListener(listener) {
     const emitter = _getEmitter();
     return emitter.addListener('Expo.updatesEvent', listener);
 }
-// Methods used internally to add listeners for state change events and for JS-only internal events
+// Internal methods
 /**
  * @hidden
  */
@@ -65,24 +65,6 @@ export const addUpdatesStateChangeListener = (listener) => {
     // Add listener for state change events
     const emitter = _getEmitter();
     return emitter.addListener('Expo.updatesStateChangeEvent', listener);
-};
-/**
- * @hidden
- */
-export const addUseUpdatesListener = (listener) => {
-    const emitter = _getEmitter();
-    return emitter.addListener('Expo.useUpdatesEvent', listener);
-};
-// Methods to emit events from JS
-/**
- * @hidden
- */
-export const emitUseUpdatesEvent = (event) => {
-    // Allows JS to emit a useUpdates event (used internally by useUpdates() hook)
-    if (!_emitter) {
-        throw new Error(`EventEmitter must be initialized to use from its listener`);
-    }
-    _emitter?.emit('Expo.useUpdatesEvent', event);
 };
 /**
  * @hidden

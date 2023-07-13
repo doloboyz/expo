@@ -72,11 +72,6 @@ export type UpdateInfo = {
    * The [manifest](https://docs.expo.dev/versions/latest/sdk/constants/#manifest) for the update.
    */
   manifest: Manifest | null;
-  /**
-   * True if this update is a directive to invalidate all downloaded updates and roll back to running the embedded app bundle.
-   * False otherwise.
-   */
-  isRollback: boolean;
 };
 
 /**
@@ -115,54 +110,37 @@ export type UseUpdatesReturnType = {
    */
   isDownloading: boolean;
   /**
-   * If an error is returned by any of the APIs to check for, download, or launch updates,
+   * If an error is returned from either the startup check for updates, or a call to `checkForUpdateAsync()`,
    * the error description will appear here.
    */
-  error?: Error;
+  checkError?: Error;
+  /**
+   * If an error is returned from either a startup update download, or a call to `fetchUpdateAsync()`,
+   * the error description will appear here.
+   */
+  downloadError?: Error;
   /**
    * A `Date` object representing the last time this client checked for an available update,
    * or `undefined` if no check has yet occurred since the app started. Does not persist across
    * app reloads or restarts.
    */
   lastCheckForUpdateTimeSinceRestart?: Date;
-  /**
-   * If present, contains items of type [UpdatesLogEntry](https://docs.expo.dev/versions/latest/sdk/updates/#updateslogentry)
-   * returned by the `getLogEntries()` method.
-   */
-  logEntries?: UpdatesLogEntry[];
 };
 
 /**
  * @hidden
  */
 export type UseUpdatesStateType = {
-  // Type for the state managed by useUpdates(). Used internally by this module and not exported publicly.
+  // Type for the state managed by useUpdates().
+  // Used internally by this module and not exported publicly.
   availableUpdate?: UpdateInfo;
   downloadedUpdate?: UpdateInfo;
-  error?: Error;
+  checkError?: Error;
+  downloadError?: Error;
   isUpdateAvailable: boolean;
   isUpdatePending: boolean;
   isChecking: boolean;
   isDownloading: boolean;
   lastCheckForUpdateTimeSinceRestart?: Date;
-  logEntries?: UpdatesLogEntry[];
-};
-
-/**
- * @hidden
- */
-export enum UseUpdatesInternalEventType {
-  // Type enum for the internal events used by the useUpdates() hook.
-  ERROR = 'error',
-  READ_LOG_ENTRIES_COMPLETE = 'readLogEntriesComplete',
-}
-
-/**
- * @hidden
- */
-export type UseUpdatesInternalEvent = {
-  // Type for the internal events used by the useUpdates() hook.
-  type: UseUpdatesInternalEventType;
-  error?: Error;
   logEntries?: UpdatesLogEntry[];
 };

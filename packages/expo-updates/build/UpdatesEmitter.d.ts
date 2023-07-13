@@ -1,6 +1,5 @@
 import { EventSubscription } from 'fbemitter';
 import type { UpdateEvent, UpdatesNativeStateChangeEvent } from './Updates.types';
-import type { UseUpdatesInternalEvent } from './UseUpdates.types';
 /**
  * Adds a callback to be invoked when updates-related events occur (such as upon the initial app
  * load) due to auto-update settings chosen at build-time. See also the
@@ -16,14 +15,6 @@ export declare function addListener(listener: (event: UpdateEvent) => void): Eve
  * @hidden
  */
 export declare const addUpdatesStateChangeListener: (listener: (event: UpdatesNativeStateChangeEvent) => void) => EventSubscription;
-/**
- * @hidden
- */
-export declare const addUseUpdatesListener: (listener: (event: UseUpdatesInternalEvent) => void) => EventSubscription;
-/**
- * @hidden
- */
-export declare const emitUseUpdatesEvent: (event: UseUpdatesInternalEvent) => void;
 /**
  * @hidden
  */
