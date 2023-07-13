@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import * as Updates from './Updates';
 import { UpdateEvent, UpdatesNativeStateMachineContext } from './Updates.types';
+import { addListener, addUpdatesStateChangeListener } from './UpdatesEmitter';
 
 /**
  * React hook to create an [`UpdateEvent`](#updateevent) listener subscription on mount, using
@@ -36,7 +37,7 @@ export const useUpdateEvents = (listener: (event: UpdateEvent) => void) => {
 
   useEffect(() => {
     if (listenerRef.current) {
-      const subscription = Updates.addListener(listenerRef.current);
+      const subscription = addListener(listenerRef.current);
       return () => {
         subscription.remove();
       };
@@ -69,7 +70,7 @@ export const useNativeStateMachineContext: () => UpdatesNativeStateMachineContex
     Updates.getNativeStateMachineContextAsync().then((context) => {
       setLocalState(context);
     });
-    const subscription = Updates.addUpdatesStateChangeListener((event) => {
+    const subscription = addUpdatesStateChangeListener((event) => {
       setLocalState(event.context);
     });
     return () => subscription.remove();
