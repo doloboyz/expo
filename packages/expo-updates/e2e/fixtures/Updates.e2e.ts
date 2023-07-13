@@ -711,7 +711,7 @@ describe('JS API tests', () => {
     jestExpect(downloadedManifestId4).toEqual('');
     // After check for update and getting a rollback
     jestExpect(isUpdateAvailable5).toEqual('true');
-    jestExpect(isUpdatePending5).toEqual('true');
+    jestExpect(isUpdatePending5).toEqual('false');
     jestExpect(isRollback5).toEqual('true');
     jestExpect(latestManifestId5).toEqual('');
     jestExpect(downloadedManifestId5).toEqual('');

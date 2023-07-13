@@ -1,7 +1,6 @@
 /**
  * Test app that shows some features of the Updates API
  */
-import { checkForUpdate, downloadUpdate, useUpdates } from '@expo/use-updates';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
 import React, { useEffect, useState } from 'react';
@@ -15,12 +14,14 @@ export default function App() {
       <Text style={styles.titleText}>Updates JS API test</Text>
       <Pressable
         style={styles.button}
-        onPress={() => setShowingView1((showingView1) => !showingView1)}>
+        onPress={() => setShowingView1((showingView1) => !showingView1)}
+      >
         <Text style={styles.buttonText}>Toggle view 1</Text>
       </Pressable>
       <Pressable
         style={styles.button}
-        onPress={() => setShowingView2((showingView2) => !showingView2)}>
+        onPress={() => setShowingView2((showingView2) => !showingView2)}
+      >
         <Text style={styles.buttonText}>Toggle view 2</Text>
       </Pressable>
       {showingView1 ? <UpdatesStatusView index={1} /> : null}
@@ -31,36 +32,76 @@ export default function App() {
 
 function UpdatesStatusView(props: { index: number }) {
   const [updateMessage, setUpdateMessage] = React.useState('');
+  const [isRollback, setIsRollback] = React.useState(false);
 
   // Displays a message showing whether or not the app is running
   // a downloaded update
-  const runTypeMessage = Updates.isEmbeddedLaunch
-    ? 'This app is running from built-in code'
-    : 'This app is running an update';
+  const runTypeMessage =
+    `isEmbeddedLaunch = ${Updates.isEmbeddedLaunch}\n` +
+    `isUsingEmbeddedAssets = ${Updates.isUsingEmbeddedAssets}`;
 
   const checkAutomaticallyMessage = `Automatic check setting = ${Updates.checkAutomatically}`;
 
-  const { isUpdateAvailable, isUpdatePending, isChecking, isDownloading, availableUpdate, error } =
-    useUpdates();
+  const {
+    isUpdateAvailable,
+    isUpdatePending,
+    isChecking,
+    isDownloading,
+    availableUpdate,
+    checkError,
+    downloadError,
+  } = Updates.useUpdates();
+
+  useEffect(() => {
+    const handleAsync = async () => {
+      const state = await Updates.getNativeStateMachineContextAsync();
+      setIsRollback(state.isRollback);
+    };
+    if (isUpdateAvailable) {
+      handleAsync();
+    }
+  }, [isUpdateAvailable]);
 
   useEffect(() => {
     const checkingMessage = isChecking ? 'Checking for an update...\n' : '';
     const downloadingMessage = isDownloading ? 'Downloading...\n' : '';
     const availableMessage = isUpdateAvailable
-      ? availableUpdate?.isRollback
+      ? isRollback
         ? 'Rollback directive found\n'
-        : `Found a new update: manifest = \n${manifestToString(availableUpdate?.manifest)}...` +
-          '\n'
+        : `Found a new update: manifest = \n${manifestToString(
+            availableUpdate?.manifest,
+          )}...` + '\n'
       : 'No new update available\n';
-    const errorMessage = error ? `Error in update API: ${error.message}` : '';
-    setUpdateMessage(checkingMessage + downloadingMessage + availableMessage + errorMessage);
-  }, [isUpdateAvailable, isUpdatePending, isChecking, isDownloading, error]);
+    const checkErrorMessage = checkError
+      ? `Error in check: ${checkError.message}`
+      : '';
+    const downloadErrorMessage = downloadError
+      ? `Error in check: ${downloadError.message}`
+      : '';
+    setUpdateMessage(
+      checkingMessage +
+        downloadingMessage +
+        availableMessage +
+        checkErrorMessage +
+        downloadErrorMessage,
+    );
+  }, [
+    isUpdateAvailable,
+    isUpdatePending,
+    isChecking,
+    isDownloading,
+    checkError,
+    downloadError,
+    isRollback,
+  ]);
 
   useEffect(() => {
     const handleReloadAsync = async () => {
       let countdown = 5;
       while (countdown > 0) {
-        setUpdateMessage(`Downloaded update... launching it in ${countdown} seconds.`);
+        setUpdateMessage(
+          `Downloaded update... launching it in ${countdown} seconds.`,
+        );
         countdown = countdown - 1;
         await delay(1000);
       }
@@ -71,18 +112,12 @@ function UpdatesStatusView(props: { index: number }) {
     }
   }, [isUpdatePending]);
 
-  useEffect(() => {
-    if (error) {
-      setUpdateMessage(`Error in update API: ${error.message}`);
-    }
-  }, [error]);
-
   const handleCheckButtonPress = () => {
-    checkForUpdate();
+    Updates.checkForUpdateAsync();
   };
 
   const handleDownloadButtonPress = () => {
-    downloadUpdate();
+    Updates.fetchUpdateAsync();
   };
 
   return (
@@ -163,7 +198,7 @@ const manifestToString = (manifest?: Updates.Manifest) => {
           // metadata: manifest.metadata,
         },
         null,
-        2
+        2,
       )
     : 'null';
 };
