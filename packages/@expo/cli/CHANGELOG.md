@@ -7,6 +7,7 @@
 ### 🎉 New features
 
 - Add support for SSO users. ([#22945](https://github.com/expo/expo/pull/22945) by [@lzkb](https://github.com/lzkb))
+- Add `expo run` command to select platform to run.
 
 ### 🐛 Bug fixes
 
