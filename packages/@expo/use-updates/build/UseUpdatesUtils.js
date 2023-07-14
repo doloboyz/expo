@@ -1,4 +1,5 @@
 import * as Updates from 'expo-updates';
+import { UseUpdatesEventType } from './UseUpdates.types';
 // The currently running info, constructed from Updates constants
 export const currentlyRunning = {
     updateId: Updates.updateId,
@@ -10,11 +11,9 @@ export const currentlyRunning = {
     runtimeVersion: Updates.runtimeVersion,
 };
 /////// Internal functions ////////
-// Constructs the availableUpdate from the native state change event context
-export const availableUpdateFromContext = (context) => {
-    const manifest = context?.latestManifest;
-    const isRollback = context.isRollback;
-    return manifest || isRollback
+// Constructs the availableUpdate from the update manifest
+export const availableUpdateFromManifest = (manifest) => {
+    return manifest
         ? {
             updateId: manifest?.id ?? null,
             createdAt: manifest && 'createdAt' in manifest && manifest.createdAt
@@ -22,55 +21,26 @@ export const availableUpdateFromContext = (context) => {
                 : manifest && 'publishedTime' in manifest && manifest.publishedTime
                     ? new Date(manifest.publishedTime)
                     : null,
-            manifest: manifest || null,
-            isRollback,
+            manifest,
         }
         : undefined;
 };
-// Constructs the downloadedUpdate from the native state change event context
-export const downloadedUpdateFromContext = (context) => {
-    const manifest = context?.downloadedManifest;
-    const isRollback = context.isRollback;
-    return manifest || isRollback
-        ? {
-            updateId: manifest?.id ?? null,
-            createdAt: manifest && 'createdAt' in manifest && manifest.createdAt
-                ? new Date(manifest.createdAt)
-                : manifest && 'publishedTime' in manifest && manifest.publishedTime
-                    ? new Date(manifest.publishedTime)
-                    : null,
-            manifest: manifest || null,
-            isRollback,
-        }
-        : undefined;
-};
-// Default useUpdates() state
-export const defaultUseUpdatesState = {
-    isChecking: false,
-    isDownloading: false,
-    isUpdateAvailable: false,
-    isUpdatePending: false,
-};
-// Transform the useUpdates() state based on native state machine context
-export const reduceUpdatesStateFromContext = (updatesState, context) => {
-    if (context.isChecking) {
-        return {
-            ...updatesState,
-            isChecking: true,
-            lastCheckForUpdateTimeSinceRestart: new Date(),
-        };
+// Constructs the available update from an event
+export const availableUpdateFromEvent = (event) => {
+    switch (event.type) {
+        case UseUpdatesEventType.NO_UPDATE_AVAILABLE:
+            return {};
+        case UseUpdatesEventType.UPDATE_AVAILABLE:
+        case UseUpdatesEventType.DOWNLOAD_COMPLETE:
+            return {
+                availableUpdate: availableUpdateFromManifest(event?.manifest || undefined),
+            };
+        case UseUpdatesEventType.ERROR:
+            return {
+                error: event.error,
+            };
+        default:
+            return {};
     }
-    const availableUpdate = availableUpdateFromContext(context);
-    const downloadedUpdate = downloadedUpdateFromContext(context);
-    return {
-        ...updatesState,
-        isUpdateAvailable: context.isUpdateAvailable,
-        isUpdatePending: context.isUpdatePending || availableUpdate?.isRollback || false,
-        isChecking: context.isChecking,
-        isDownloading: context.isDownloading,
-        availableUpdate,
-        downloadedUpdate,
-        error: context.checkError || context.downloadError,
-    };
 };
 //# sourceMappingURL=UseUpdatesUtils.js.map

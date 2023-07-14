@@ -1,15 +1,34 @@
 import * as Updates from 'expo-updates';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { UseUpdatesEventType } from './UseUpdates.types';
-import { emitUseUpdatesEvent, useUpdateEvents } from './UseUpdatesEmitter';
-import { currentlyRunning, defaultUseUpdatesState, reduceUpdatesStateFromContext, } from './UseUpdatesUtils';
+import { emitEvent, useUpdateEvents } from './UseUpdatesEmitter';
+import { currentlyRunning, availableUpdateFromEvent } from './UseUpdatesUtils';
 /**
  * Calls [`Updates.checkForUpdateAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatescheckforupdateasync)
  * and refreshes the `availableUpdate` property with the result.
  * If an error occurs, the `error` property will be set.
  */
 export const checkForUpdate = () => {
-    Updates.checkForUpdateAsync();
+    Updates.checkForUpdateAsync()
+        .then((result) => {
+        if (result.isAvailable) {
+            emitEvent({
+                type: UseUpdatesEventType.UPDATE_AVAILABLE,
+                manifest: result?.manifest || undefined,
+            });
+        }
+        else {
+            emitEvent({
+                type: UseUpdatesEventType.NO_UPDATE_AVAILABLE,
+            });
+        }
+    })
+        .catch((error) => {
+        emitEvent({
+            type: UseUpdatesEventType.ERROR,
+            error,
+        });
+    });
 };
 /**
  * Downloads an update, if one is available, using
@@ -18,7 +37,21 @@ export const checkForUpdate = () => {
  * If an error occurs, the `error` property will be set.
  */
 export const downloadUpdate = () => {
-    Updates.fetchUpdateAsync();
+    emitEvent({
+        type: UseUpdatesEventType.DOWNLOAD_START,
+    });
+    Updates.fetchUpdateAsync()
+        .then((result) => {
+        emitEvent({
+            type: UseUpdatesEventType.DOWNLOAD_COMPLETE,
+        });
+    })
+        .catch((error) => {
+        emitEvent({
+            type: UseUpdatesEventType.ERROR,
+            error,
+        });
+    });
 };
 /**
  * Runs an update by calling [`Updates.reloadAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatesreloadasync).
@@ -29,7 +62,12 @@ export const downloadUpdate = () => {
  * If an error occurs, the `error` property will be set.
  */
 export const runUpdate = () => {
-    Updates.reloadAsync();
+    Updates.reloadAsync().catch((error) => {
+        emitEvent({
+            type: UseUpdatesEventType.ERROR,
+            error,
+        });
+    });
 };
 /**
  * Calls `Updates.readLogEntriesAsync()` and sets the `logEntries` property to the results.
@@ -40,13 +78,13 @@ export const runUpdate = () => {
 export const readLogEntries = (maxAge = 3600000) => {
     Updates.readLogEntriesAsync(maxAge)
         .then((logEntries) => {
-        emitUseUpdatesEvent({
+        emitEvent({
             type: UseUpdatesEventType.READ_LOG_ENTRIES_COMPLETE,
             logEntries,
         });
     })
         .catch((error) => {
-        emitUseUpdatesEvent({
+        emitEvent({
             type: UseUpdatesEventType.ERROR,
             error,
         });
@@ -104,19 +142,46 @@ export const readLogEntries = (maxAge = 3600000) => {
  * ```
  */
 export const useUpdates = () => {
-    const [updatesState, setUpdatesState] = useState(defaultUseUpdatesState);
-    const context = Updates.useNativeStateMachineContext();
-    // Change the state based on native state machine context changes
-    useEffect(() => {
-        setUpdatesState((updatesState) => reduceUpdatesStateFromContext(updatesState, context));
-    }, [context]);
-    // Set up listener for events from readLogEntriesAsync
+    const [updatesState, setUpdatesState] = useState({
+        isUpdateAvailable: false,
+        isUpdatePending: false,
+    });
+    // Set up listener for events from automatic update requests
+    // that happen on startup, and use events to refresh the updates info
+    // context
     useUpdateEvents((event) => {
+        const { availableUpdate, error } = availableUpdateFromEvent(event);
         switch (event.type) {
+            case UseUpdatesEventType.NO_UPDATE_AVAILABLE:
+                setUpdatesState((updatesState) => ({
+                    ...updatesState,
+                    availableUpdate,
+                    isUpdateAvailable: false,
+                    lastCheckForUpdateTimeSinceRestart: new Date(),
+                }));
+                break;
+            case UseUpdatesEventType.UPDATE_AVAILABLE:
+                setUpdatesState((updatesState) => ({
+                    ...updatesState,
+                    availableUpdate,
+                    isUpdateAvailable: true,
+                    lastCheckForUpdateTimeSinceRestart: new Date(),
+                }));
+                break;
             case UseUpdatesEventType.ERROR:
                 setUpdatesState((updatesState) => ({
                     ...updatesState,
-                    error: event.error,
+                    error,
+                    lastCheckForUpdateTimeSinceRestart: new Date(),
+                }));
+                break;
+            case UseUpdatesEventType.DOWNLOAD_COMPLETE:
+                setUpdatesState((updatesState) => ({
+                    ...updatesState,
+                    availableUpdate: availableUpdate || updatesState.availableUpdate,
+                    isUpdateAvailable: true,
+                    isUpdatePending: true,
+                    lastCheckForUpdateTimeSinceRestart: new Date(),
                 }));
                 break;
             case UseUpdatesEventType.READ_LOG_ENTRIES_COMPLETE:

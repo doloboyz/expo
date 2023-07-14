@@ -63,9 +63,10 @@ export type CurrentlyRunningInfo = {
 };
 
 /**
- * Structure representing an available or downloaded update.
+ * Structure representing an available update that has been returned by a call to [`checkForUpdate()`](#checkforupdate)
+ * or an [`UpdateEvent`](#updateevent) emitted by native code.
  */
-export type UpdateInfo = {
+export type AvailableUpdateInfo = {
   /**
    * A string that uniquely identifies the update. For the manifests used in the current Expo Updates protocol (including
    * EAS Update), this represents the update's UUID in its canonical string form (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
@@ -79,12 +80,7 @@ export type UpdateInfo = {
   /**
    * The [manifest](https://docs.expo.dev/versions/latest/sdk/constants/#manifest) for the update.
    */
-  manifest: Manifest | null;
-  /**
-   * True if this update is a directive to invalidate all downloaded updates and roll back to running the embedded app bundle.
-   * False otherwise.
-   */
-  isRollback: boolean;
+  manifest: Manifest;
 };
 
 /**
@@ -100,12 +96,7 @@ export type UseUpdatesReturnType = {
    * or by the `UpdateEvent` listener in `useUpdates()`,
    * this will contain the information for that update.
    */
-  availableUpdate?: UpdateInfo;
-  /**
-   * If an available update has been downloaded, this will contain the information
-   * for that update.
-   */
-  downloadedUpdate?: UpdateInfo;
+  availableUpdate?: AvailableUpdateInfo;
   /**
    * True if a new available update has been found, false otherwise.
    */
@@ -114,14 +105,6 @@ export type UseUpdatesReturnType = {
    * True if a new available update is available and has been downloaded.
    */
   isUpdatePending: boolean;
-  /**
-   * True if the app is currently checking for a new available update from the server.
-   */
-  isChecking: boolean;
-  /**
-   * True if the app is currently downloading an update from the server.
-   */
-  isDownloading: boolean;
   /**
    * If an error is returned by any of the APIs to check for, download, or launch updates,
    * the error description will appear here.
@@ -140,15 +123,12 @@ export type UseUpdatesReturnType = {
   logEntries?: UpdatesLogEntry[];
 };
 
-// Type for the state managed by useUpdates(). Used internally by this module and not exported publicly.
+// Internal type for the state managed by useUpdates()
 export type UseUpdatesStateType = {
-  availableUpdate?: UpdateInfo;
-  downloadedUpdate?: UpdateInfo;
+  availableUpdate?: AvailableUpdateInfo;
   error?: Error;
   isUpdateAvailable: boolean;
   isUpdatePending: boolean;
-  isChecking: boolean;
-  isDownloading: boolean;
   lastCheckForUpdateTimeSinceRestart?: Date;
   logEntries?: UpdatesLogEntry[];
 };
@@ -158,9 +138,30 @@ export type UseUpdatesStateType = {
  */
 export enum UseUpdatesEventType {
   /**
+   * A new update is available for the app. This event can be fired either from
+   * the native code that automatically checks for an update on startup (when automatic updates
+   * are enabled), or from the completion of checkForUpdate().
+   */
+  UPDATE_AVAILABLE = 'updateAvailable',
+  /**
+   * No new update is available for the app, and the most up-to-date update is already running.
+   * This event can be fired either from
+   * the native code that automatically checks for an update on startup (when automatic updates
+   * are enabled), or from the completion of checkForUpdate().
+   */
+  NO_UPDATE_AVAILABLE = 'noUpdateAvailable',
+  /**
    * An error occurred.
    */
   ERROR = 'error',
+  /**
+   * A call to `downloadUpdate()` has started.
+   */
+  DOWNLOAD_START = 'downloadStart',
+  /**
+   * A call to `downloadUpdate()` has completed successfully.
+   */
+  DOWNLOAD_COMPLETE = 'downloadComplete',
   /**
    * A call to `readLogEntries()` has completed successfully.
    */
@@ -175,6 +176,11 @@ export type UseUpdatesEvent = {
    * Type of the event.
    */
   type: UseUpdatesEventType;
+  /**
+   * If `type` is `UseUpdatesEvent.UPDATE_AVAILABLE` or `UseUpdatesEvent.DOWNLOAD_COMPLETE`,
+   * the manifest of the new update, and `undefined` otherwise.
+   */
+  manifest?: Manifest;
   /**
    * If `type` is `UseUpdatesEventType.ERROR`, the error, and `undefined` otherwise.
    */
