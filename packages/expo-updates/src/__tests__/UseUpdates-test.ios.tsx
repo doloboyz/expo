@@ -7,20 +7,7 @@ import { emitStateChangeEvent } from '../UpdatesEmitter';
 import { availableUpdateFromContext } from '../UseUpdatesUtils';
 import UseUpdatesTestApp from './UseUpdatesTestApp';
 
-jest.mock('expo-updates', () => {
-  return {
-    ...jest.requireActual('expo-updates'),
-    channel: 'main',
-    updateId: '0000-1111',
-    createdAt: new Date('2023-03-26T04:58:02.560Z'),
-    checkForUpdateAsync: jest.fn(),
-    fetchUpdateAsync: jest.fn(),
-    reload: jest.fn(),
-    readLogEntriesAsync: jest.fn(),
-    useUpdateEvents: jest.fn(),
-    nativeStateMachineContext: undefined,
-  };
-});
+jest.mock('../ExpoUpdates');
 
 describe('useUpdates()', () => {
   describe('Component tests', () => {
@@ -111,8 +98,9 @@ describe('useUpdates()', () => {
         downloadError: mockError,
       },
     };
-    xit('Shows currently running info', async () => {
-      render(<UseUpdatesTestApp />);
+
+    it('Shows currently running info', async () => {
+      await render(<UseUpdatesTestApp />);
       const updateIdView = await screen.findByTestId('currentlyRunning_updateId');
       expect(updateIdView).toHaveTextContent('0000-1111');
       const createdAtView = await screen.findByTestId('currentlyRunning_createdAt');
@@ -121,10 +109,12 @@ describe('useUpdates()', () => {
       expect(channelView).toHaveTextContent('main');
     });
 
-    xit('Shows available update after receiving state change', async () => {
+    it('Shows available update after receiving state change', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isCheckingEvent);
+      });
+      await act(async () => {
         emitStateChangeEvent(updateAvailableEvent);
       });
       const lastCheckForUpdateTime = new Date();
@@ -139,10 +129,12 @@ describe('useUpdates()', () => {
       expect(isUpdateAvailableView).toHaveTextContent('true');
     });
 
-    xit('Shows no available update after receiving state change', async () => {
+    it('Shows no available update after receiving state change', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isCheckingEvent);
+      });
+      await act(async () => {
         emitStateChangeEvent(updateUnavailableEvent);
       });
       const updateIdView = await screen.findByTestId('availableUpdate_updateId');
@@ -158,22 +150,26 @@ describe('useUpdates()', () => {
       expect(isUpdateAvailableView).toHaveTextContent('false');
     });
 
-    xit('Handles error in checkForUpdate()', async () => {
+    it('Handles error in checkForUpdate()', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isCheckingEvent);
+      });
+      await act(async () => {
         emitStateChangeEvent(checkErrorEvent);
       });
-      const errorView = await screen.findByTestId('error');
+      const errorView = await screen.findByTestId('checkError');
       expect(errorView).toHaveTextContent('test message');
       const isUpdateAvailableView = await screen.findByTestId('isUpdateAvailable');
       expect(isUpdateAvailableView).toHaveTextContent('false');
     });
 
-    xit('Shows downloaded update after receiving state change', async () => {
+    it('Shows downloaded update after receiving state change', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isDownloadingEvent);
+      });
+      await act(async () => {
         emitStateChangeEvent(updateDownloadedEvent);
       });
       const isUpdateAvailableView = await screen.findByTestId('isUpdateAvailable');
@@ -184,13 +180,15 @@ describe('useUpdates()', () => {
       expect(isUpdatePendingView).toHaveTextContent('true');
     });
 
-    xit('Handles error during downloadUpdate()', async () => {
+    it('Handles error during downloadUpdate()', async () => {
       render(<UseUpdatesTestApp />);
       await act(async () => {
         emitStateChangeEvent(isDownloadingEvent);
+      });
+      await act(async () => {
         emitStateChangeEvent(downloadErrorEvent);
       });
-      const errorView = await screen.findByTestId('error');
+      const errorView = await screen.findByTestId('downloadError');
       expect(errorView).toHaveTextContent('test message');
       const isUpdateAvailableView = await screen.findByTestId('isUpdateAvailable');
       expect(isUpdateAvailableView).toHaveTextContent('false');
